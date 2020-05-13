@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>COVID19 Loan book Scenario demo</title>
+    <script src="https://code.highcharts.com/gantt/highcharts-gantt.js"></script>
+    <script src="https://code.highcharts.com/gantt/modules/draggable-points.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+
+<style>
+
+
+        body {
+          font-family: "Source Sans Pro",Helvetica,Arial,sans-serif;
+          color:#272625;
+          background-color:#F0F4FA
+        }
+
+
+    #container, #buttonGroup {
+  max-width: 1200px;
+  min-width: 320px;
+  margin: 1em auto;
+}
+
+.hidden {
+  display: none;
+}}
+
+.main-container button {
+  font-size: 12px;
+  border-radius: 2px;
+  border: 0;
+  background-color: #ddd;
+  padding: 13px 18px;
+}
+
+.main-container button[disabled] {
+  color: silver;
+}
+
+.button-row button {
+  display: inline-block;
+  margin: 0;
+}
+
+.button-row1 button {
+  display: inline-block;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.3);
+  transition: opacity 500ms;
+}
+
+.popup {
+  margin: 70px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 5px;
+  width: 300px;
+  position: relative;
+}
+
+.popup input, .popup select {
+  width: 100%;
+  margin: 5px 0 15px;
+}
+
+.popup button {
+  float: right;
+  margin-left: 0.2em;
+}
+
+.popup .clear {
+  height: 50px;
+}
+
+.popup input[type=text], .popup select {
+  height: 2em;
+  font-size: 16px;
+}
+ ?>
+
+div.sidebyside{
+  width: 80%;
+  height: 200px;
+margin: 0 auto;
+  padding: 10px;
+
+}
+
+.one {
+  width: 49%;
+  float: left;
+}
+
+.two {
+  width:49%;
+}
+
+    div.logo {
+           height:60px;
+           width:160px;
+           left :50px;
+           top:10px;
+           margin:10px;
+           margin-bottom:20px;
+           display:block;
+       }
+
+button{
+          padding:10px;
+          font-weight: 500;
+          margin:10px;
+          display:block;
+
+          font-size:16px;
+          color:#951B81;
+          background-color:white;
+          border-radius: 25px;
+          box-shadow: 5px 5px 6px rgba(0, 0, 0, .1);
+          border: 1.5pt solid transparent;
+          border-radius: 15px;
+          }
+
+       .runbtn{
+                 background-color: #E6007E;
+          padding:10px;
+          font-weight: 500;
+          margin:10px;
+          display:block;
+
+          font-size:16px;
+          color:white;
+          border-radius: 25px;
+          box-shadow: 5px 5px 6px rgba(0, 0, 0, .1);
+          border: 1.5pt solid transparent;
+          border-radius: 15px;
+
+}
+
+
+#myTable {
+    border-collapse: collapse; /* Collapse borders */
+    width: 100%; /* Full-width */
+    border: 1px solid #ddd; /* Add a grey border */
+    font-size: 12px; /* Increase font-size */
+}
+
+#myTable th, #myTable td {
+    text-align: left; /* Left-align text */
+    padding: 10px; /* Add padding */
+        color:#000;
+}
+
+#myTable tr {
+    /* Add a bottom border to all table rows */
+    border-bottom: 1px solid #ddd;
+}
+
+#myTable tr.header, #myTable > thead {
+    /* Add a grey background color to the table header and on hover */
+    color:#000;
+    background-color:#DDD;
+}
+
+ #myTable tr:hover{
+     background-color: #EEEEEE;
+ }
+
+.section{margin-bottom:50px; width:80%;margin-left:10%;      display:block;}
+.table_section{margin-bottom:50px;}
+
+</style>
+</head>
+<body>
+
+        <div class="logo"><img src = "new_logo.png" height="60px"></div>
+<button id = "btnshowexplain" style="margin-left:10%;margin-top:2%;" onclick="document.getElementById('explain').hidden = !document.getElementById('explain').hidden">
+    Click for explanations
+</button>
+
+        <div id="explain" hidden>
+
+        <div class = "section">
+
+           <h1>Loan book generation</h1>
+
+            <p> We sampled the Irish Goldenpages for ~37k busniesses, with breakdown of sectors and subsectors. These were assigned a high level industry category, for which we have some details on how they may react to the COVID19 situation.[1] </p>
+
+            <p> Typical semi realisetic values such as turnover and expenditure were generated based on the busniess type. Since most busniesses are considered small to micro, we've kept the book to be for companies with less than €10 million a year turnover.</p>
+
+            <p>We generated some outstanding loan, and term length and derived the monthly loan payments based on that.</p>
+
+            <p>A loan is considered as default when 3 payments were missed. The baseline of default is around 2% with no COVID19. The demo below allows for the lockdown period to be adjusted.</p>
+
+            <p>We simulate the calender year of 2020 to forecast their payment capability based on the impact of COVID19 on their industries.</p>
+
+            [1] Sources: Eurostat; LabourCube; Moody's; Occupational Employment Statistics; McKinsey Global Institute analysis
+
+        </div>
+
+                <div class = "table_section">
+           <h2 style="margin-left:10%;">Loan book sample data</h2>
+                    <table border="1" class="dataframe" id="myTable">  <thead>    <tr style="text-align: right;">      <th>loan_id</th>      <th>Company Name</th>      <th>Address</th>      <th>Phone number</th>      <th>County</th>      <th>sector</th>      <th>subsector</th>      <th>company size</th>      <th>Turnover</th>      <th>Turnover_monthly</th>      <th>Expenditure</th>      <th>Exp_monthly</th>      <th>Profit</th>      <th>margin</th>      <th>cash_reserves</th>      <th>runrate</th>      <th>Outstanding</th>      <th>Term</th>      <th>Interest rate (%)</th>      <th>Repayments</th>    </tr>  </thead>  <tbody>    <tr>      <th>13072</th>      <td>Kay's Kitchen</td>      <td>u41 Donaghmede s.c.   D13Y7P4 Co. Dublin</td>      <td>(01)8474653</td>      <td>Dublin</td>      <td>eating-drinking</td>      <td>restaurants</td>      <td>Micro</td>      <td>478499.00</td>      <td>39874.92</td>      <td>342797.03</td>      <td>28566.42</td>      <td>135701.97</td>      <td>0.283599</td>      <td>32574.0</td>      <td>1.140290</td>      <td>212953.99</td>      <td>44.0</td>      <td>5.800</td>      <td>5384.37</td>    </tr>    <tr>      <th>12037</th>      <td>Premier Take Away</td>      <td>Main st Littleton  E41A3C3 Co. Tipperary</td>      <td>(0504)44808</td>      <td>Tipperary</td>      <td>eating-drinking</td>      <td>restaurants</td>      <td>Micro</td>      <td>596277.90</td>      <td>49689.82</td>      <td>405813.51</td>      <td>33817.79</td>      <td>190464.39</td>      <td>0.319422</td>      <td>40591.0</td>      <td>1.200285</td>      <td>120313.89</td>      <td>44.0</td>      <td>5.800</td>      <td>3042.04</td>    </tr>    <tr>      <th>37612</th>      <td>All Ash Tipping Services Ltd</td>      <td>Carnmore Oranmore Galway    Co. Galway</td>      <td>(091)788764</td>      <td>Galway</td>      <td>warehousing-logistics</td>      <td>haulage-contractors</td>      <td>Micro</td>      <td>522589.18</td>      <td>43549.10</td>      <td>392922.45</td>      <td>32743.54</td>      <td>129666.73</td>      <td>0.248124</td>      <td>33558.0</td>      <td>1.024874</td>      <td>96860.29</td>      <td>25.0</td>      <td>3.164</td>      <td>4008.61</td>    </tr>    <tr>      <th>33328</th>      <td>Sunnybank Guest House</td>      <td>Fairhill Killarney    Co. Kerry</td>      <td>(064)6634109</td>      <td>Kerry</td>      <td>sports-leisure-travel</td>      <td>b-b</td>      <td>Micro</td>      <td>493593.98</td>      <td>41132.83</td>      <td>468862.03</td>      <td>39071.84</td>      <td>24731.95</td>      <td>0.050106</td>      <td>35737.0</td>      <td>0.914649</td>      <td>53984.33</td>      <td>45.0</td>      <td>5.044</td>      <td>1319.20</td>    </tr>    <tr>      <th>18438</th>      <td>Stork Furniture Sales Tralee</td>      <td>Pier 17 Business Centre  Dingle Rd  Tralee V92 Y522 Co. Kerry</td>      <td>(087)3324817</td>      <td>Kerry</td>      <td>home-furnishings-finishing</td>      <td>furniture-shops</td>      <td>Micro</td>      <td>500406.04</td>      <td>41700.50</td>      <td>357634.76</td>      <td>29802.90</td>      <td>142771.28</td>      <td>0.285311</td>      <td>27947.0</td>      <td>0.937728</td>      <td>214513.69</td>      <td>45.0</td>      <td>4.858</td>      <td>5223.97</td>    </tr>    <tr>      <th>10737</th>      <td>Camile Thai</td>      <td>Old PTSB Bank, Main Street,   Blanchardstown  Co. Dublin</td>      <td>(01)8200020</td>      <td>Dublin</td>      <td>eating-drinking</td>      <td>restaurants</td>      <td>Micro</td>      <td>461234.52</td>      <td>38436.21</td>      <td>354976.69</td>      <td>29581.39</td>      <td>106257.83</td>      <td>0.230377</td>      <td>31398.0</td>      <td>1.061411</td>      <td>139916.37</td>      <td>44.0</td>      <td>5.800</td>      <td>3537.67</td>    </tr>    <tr>      <th>27267</th>      <td>Irish Life Health</td>      <td>Irish Life Centre Lower Abbey Street    Co. Dublin</td>      <td>(1890) 714 444</td>      <td>Dublin</td>      <td>real-estate-money-law</td>      <td>home-insurance-companies-life-insurance-companies</td>      <td>Micro</td>      <td>553320.22</td>      <td>46110.02</td>      <td>416560.46</td>      <td>34713.37</td>      <td>136759.76</td>      <td>0.247162</td>      <td>46820.0</td>      <td>1.348760</td>      <td>84700.42</td>      <td>28.0</td>      <td>3.653</td>      <td>3160.37</td>    </tr>    <tr>      <th>12161</th>      <td>Base Wood-Fired Pizza</td>      <td>92 Terenure Rd East  Terenure  D6 Co. Dublin</td>      <td>(01)4404800</td>      <td>Dublin</td>      <td>eating-drinking</td>      <td>restaurants</td>      <td>Micro</td>      <td>525227.35</td>      <td>43768.95</td>      <td>478369.09</td>      <td>39864.09</td>      <td>46858.26</td>      <td>0.089215</td>      <td>35755.0</td>      <td>0.896923</td>      <td>29205.86</td>      <td>19.0</td>      <td>3.039</td>      <td>1576.37</td>    </tr>    <tr>      <th>23093</th>      <td>Mulligan Michael</td>      <td>Tullig Ballinscarthy    Co. Cork</td>      <td>(023)8839292</td>      <td>Cork</td>      <td>raw-materials-components</td>      <td>coal-solid-fuel-merchants</td>      <td>Micro</td>      <td>542435.87</td>      <td>45202.99</td>      <td>383266.96</td>      <td>31938.91</td>      <td>159168.91</td>      <td>0.293434</td>      <td>35814.0</td>      <td>1.121328</td>      <td>44404.05</td>      <td>6.0</td>      <td>3.317</td>      <td>7472.44</td>    </tr></tbody></table>
+</div>
+
+        <div class = "section">
+        <h2>COVID19 Lockdown Impact</h2>
+        We used two asymmetric gaussian curves to model the initial dropoff in company incomes as well as the recovery. The region within the actual lockdown are flattened to the projected company impact from source [1]. Additional lockdown events are handled by the product of all curves for that sector. Below is an illustration of the temporal COVID19 lockdown impact model.
+
+            <img src="covid_impact_curve.png" height="500px">
+        </div>
+
+</div>
+
+<div class="sidebyside">
+              <div id="defaultcontainer" class="one"></div>
+      <div id="defaultcumsumcontainer" class="two"></div>
+</div>
+
+        <div class="sidebyside">
+              <div id="defaultcontainer_by_industry" class="one"></div>
+      <div id="defaultcontainer_curves" class="two"></div>
+</div>
+
+
+
+<div class="main-container">
+
+  <div id="container"></div>
+    <center>
+  <div id="buttonGroup" class="button-row1">
+
+    <button id="btnShowDialog">
+      <i class="fa fa-plus"></i>
+      Add event
+    </button>
+    <button id="btnRemoveSelected" disabled="disabled">
+      <i class="fa fa-remove"></i>
+      Remove selected
+    </button>
+          <button id="btnRun" class="runbtn">
+      <i class="fa fa-plus"></i>
+      Run scenario
+    </button>
+      </center>
+
+
+  </div>
+
+  <div id="addTaskDialog" class="hidden overlay">
+    <div class="popup">
+      <h3>Add event</h3>
+
+      <label>Task name <input id="inputName" type="text" /></label>
+      <label>Days<input id="lockdown_days" type="text" /></label>
+
+      <label>Industry
+        <select id="selectDepartment">
+<option value=0>Accomodation and food</option><option value=1>Agriculture</option><option value=2>Construction</option><option value=3>Education</option><option value=4>Information and communcaition</option><option value=5>Manufacturing</option><option value=6>Other services</option><option value=7>Professional services</option><option value=8>Transportation and storage</option><option value=9>Wholesale and retail</option>
+        </select>
+      </label>
+
+      <div class="button-row">
+        <button id="btnAddTask">Add</button>
+        <button id="btnCancelAddTask">Cancel</button>
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+</div>
+<div id="placeholder"></div>
+
+</body>
+
+<script>/*
+  Simple demo showing some interactivity options of Highcharts Gantt. More
+  custom behavior can be added using event handlers and API calls. See
+  http://api.highcharts.com/gantt.
+*/
+
+
+
+var today = new Date(),
+  day = 1000 * 60 * 60 * 24,
+  each = Highcharts.each,
+  reduce = Highcharts.reduce,
+  btnShowDialog = document.getElementById('btnShowDialog'),
+  btnRemoveTask = document.getElementById('btnRemoveSelected'),
+  btnAddTask = document.getElementById('btnAddTask'),
+  btnRun = document.getElementById('btnRun'),
+  btnCancelAddTask = document.getElementById('btnCancelAddTask'),
+  addTaskDialog = document.getElementById('addTaskDialog'),
+  selectDepartment = document.getElementById('selectDepartment'),
+  selectDependency = document.getElementById('selectDependency'),
+  chkMilestone = document.getElementById('chkMilestone'),
+  isAddingTask = false;
+
+// Set to 00:00:00:000 today
+today.setUTCHours(0);
+today.setUTCMinutes(0);
+today.setUTCSeconds(0);
+today.setUTCMilliseconds(0);
+today = today.getTime();
+
+// Update disabled status of the remove button, depending on whether or not we
+// have any selected points.
+function updateRemoveButtonStatus() {
+  var chart = this.series.chart;
+  // Run in a timeout to allow the select to update
+  setTimeout(function () {
+    btnRemoveTask.disabled = !chart.getSelectedPoints().length ||
+      isAddingTask;
+  }, 10);
+}
+
+
+county_lockdowns = [{"name": "Lockdown", "id": "Accomodation and food", "y": 0, "color": "#F05D5E", "counts": 11965}, {"name": "Lockdown", "id": "Agriculture", "y": 1, "color": "#F05D5E", "counts": 276}, {"name": "Lockdown", "id": "Construction", "y": 2, "color": "#F05D5E", "counts": 1755}, {"name": "Lockdown", "id": "Education", "y": 3, "color": "#F05D5E", "counts": 1782}, {"name": "Lockdown", "id": "Information and communcaition", "y": 4, "color": "#F05D5E", "counts": 424}, {"name": "Lockdown", "id": "Manufacturing", "y": 5, "color": "#F05D5E", "counts": 768}, {"name": "Lockdown", "id": "Other services", "y": 6, "color": "#F05D5E", "counts": 7982}, {"name": "Lockdown", "id": "Professional services", "y": 7, "color": "#F05D5E", "counts": 4282}, {"name": "Lockdown", "id": "Transportation and storage", "y": 8, "color": "#F05D5E", "counts": 937}, {"name": "Lockdown", "id": "Wholesale and retail", "y": 9, "color": "#F05D5E", "counts": 7513}]
+
+// loop and add the dates here.
+for (var key in county_lockdowns) {
+//console.log(key);
+// javascript is mental, months are ids starting at 0
+county_lockdowns[key]['start'] =  Date.UTC(2020, 2, 28);
+county_lockdowns[key]['end'] =  Date.UTC(2020, 4, 18);
+
+}
+
+milestone = false;
+
+// Create the chart
+var chart = Highcharts.ganttChart('container', {
+credits:false,
+  chart: {
+  style: {
+            fontFamily: 'Source Sans Pro'
+        },
+  backgroundColor:"#F0F4FA",
+    spacingLeft: 1
+  },
+
+  title: {
+    text: 'Lockdown Scenario Gantt Chart'
+  },
+
+  subtitle: {
+    text: 'Drag and drop points to edit'
+  },
+
+  plotOptions: {
+    series: {
+      animation: false, // Do not animate dependency connectors
+      dragDrop: {
+        draggableX: true,
+        draggableY: true,
+        dragMinY: 0,
+        dragMaxY:9,
+        dragPrecisionX: day  // Snap to eight hours
+      },
+      dataLabels: {
+        enabled: true,
+        format: '{point.name}',
+        style: {
+          cursor: 'default',
+          pointerEvents: 'none'
+        }
+      },
+      allowPointSelect: true,
+      point: {
+        events: {
+          select: updateRemoveButtonStatus,
+          unselect: updateRemoveButtonStatus,
+          remove: updateRemoveButtonStatus
+        }
+      }
+    }
+  },
+
+  yAxis: {
+type: 'category',
+    grid: {
+      enabled: true,
+      borderColor: 'rgba(0,0,0,0.3)',
+      borderWidth: 1,
+      columns: [{
+        title: {
+          text: 'Industry'
+        },
+        labels: {
+          format: '{point.id}'
+        }
+      },{
+        title: {
+          text: 'Loans'
+        },
+        labels: {
+          format: '{point.counts}'
+        }
+      } ,
+      {
+        title: {
+          text: 'Days'
+        },
+        labels: {
+          formatter: function () {
+            var point = this.point,
+              days = (1000 * 60 * 60 * 24),
+              number = (point.x2 - point.x) / days;
+            return Math.round(number * 100) / 100;
+          }
+        }}
+
+      ]
+      }},
+
+
+  xAxis: {
+    currentDateIndicator: true
+  },
+
+  tooltip: {
+    xDateFormat: '%a %b %d, %H:%M'
+  },
+
+  series: [{
+    name: 'Lockdown',
+    data: county_lockdowns
+      }]
+});
+
+
+/* Add button handlers for add/remove tasks */
+
+btnRemoveTask.onclick = function () {
+  var points = chart.getSelectedPoints();
+  each(points, function (point) {
+    point.remove();
+  });
+};
+
+btnShowDialog.onclick = function () {
+
+  // Show dialog by removing "hidden" class
+  addTaskDialog.className = 'overlay';
+  isAddingTask = true;
+
+  // Focus name field
+  inputName.value = 'Further lockdown';
+  lockdown_days.value = '21';
+
+};
+
+btnAddTask.onclick = function () {
+  // Get values from dialog
+  var series = chart.series[0],
+    name = inputName.value,
+    undef,
+
+    y = parseInt(
+      selectDepartment.options[selectDepartment.selectedIndex].value,
+      10
+    ),
+
+    maxEnd = reduce(series.points, function (acc, point) {
+      return point.y === y && point.end ? Math.max(acc, point.end) : acc;
+    }, 0);
+
+  // Empty category
+  if (maxEnd === 0) {
+    maxEnd = today;
+  }
+
+  // Add the point
+  series.addPoint({
+    start: maxEnd + 25*day,
+    end: maxEnd + 25*day + parseInt(lockdown_days.value)*day,
+    y: y,
+    name: name,
+    color: "#BC4142"
+  });
+
+  // Hide dialog
+  addTaskDialog.className += ' hidden';
+  isAddingTask = false;
+};
+
+btnCancelAddTask.onclick = function () {
+  // Hide dialog
+  addTaskDialog.className += ' hidden';
+  isAddingTask = false;
+};
+
+API_URL = 'https://mattdano.pythonanywhere.com/lockdown'
+
+function sendXHR(json_payload,cb) {
+  var xhr = new XMLHttpRequest();
+  var self = this;
+  xhr.open('POST', API_URL);
+    xhr.setRequestHeader('Content-type', "application/json")
+    xhr.send(json_payload)
+  xhr.onload = function () {
+  console.log(xhr.responseText);
+    var res = JSON.parse(xhr.responseText);
+    console.log(res);
+    //return res;
+    cb(res);
+  }
+  xhr.send();
+}
+
+function display_results(answer) {
+    //var placeholder = document.getElementById('placeholder');
+    //placeholder.innerHTML = JSON.stringify(answer);
+    draw_plot('defaultcontainer','Number of defaults','Number of defaults',answer['weekly_defaults'])
+    draw_plot('defaultcumsumcontainer','% of loan book defaulted','Cumulative % of loan book defaulted',answer['weekly_cumsum_defaults'])
+    //draw all the lines;
+    draw_set('defaultcontainer_by_industry','Number of defaults by industry',answer['dropout_industry'])
+    //console.log(answer['subsector_curves_info']);
+    draw_curves('defaultcontainer_curves', 'Income affected (%)', answer['subsector_curves_info'], answer['subsector_curves'])
+
+
+}
+
+
+btnRun.onclick = function () {
+
+  // Grab all the dates, and turn them into a json string, then send it to the server?
+  // for now add entries into a div element
+  //
+
+    series = chart.series[0];
+    points = series.getValidPoints();
+    entries = []
+    console.log(points);
+    for (id in points) {
+    console.log(points[id].options);
+    entries.push(points[id].options);
+    };
+
+    payload = JSON.stringify(entries);
+    //placeholder.innerHTML = payload;
+    // send this to an api.
+    // API calculates this. and maybe sends back the json.
+    results = sendXHR(payload,display_results);
+}
+
+
+</script>
+
+
+<script>
+
+function draw_plot(containername,yaxislabel,title,mydata) {
+
+    Highcharts.chart(containername, {
+        legend: {
+        enabled: false
+    },
+    credits:false,
+  chart: {
+
+  backgroundColor:"#F0F4FA"},
+  title: {
+    text: title
+  },
+
+  yAxis: {
+    title: {
+      text: yaxislabel
+    }
+  },
+
+  xAxis: {
+      categories: ["01-01-2020", "08-01-2020", "15-01-2020", "22-01-2020", "29-01-2020", "05-02-2020", "12-02-2020", "19-02-2020", "26-02-2020", "04-03-2020", "11-03-2020", "18-03-2020", "25-03-2020", "01-04-2020", "08-04-2020", "15-04-2020", "22-04-2020", "29-04-2020", "06-05-2020", "13-05-2020", "20-05-2020", "27-05-2020", "03-06-2020", "10-06-2020", "17-06-2020", "24-06-2020", "01-07-2020", "08-07-2020", "15-07-2020", "22-07-2020", "29-07-2020", "05-08-2020", "12-08-2020", "19-08-2020", "26-08-2020", "02-09-2020", "09-09-2020", "16-09-2020", "23-09-2020", "30-09-2020", "07-10-2020", "14-10-2020", "21-10-2020", "28-10-2020", "04-11-2020", "11-11-2020", "18-11-2020", "25-11-2020", "02-12-2020", "09-12-2020", "16-12-2020", "23-12-2020", "31-12-2020"],
+
+    accessibility: {
+      rangeDescription: 'Range: 2020 to 2021'
+    }
+  },
+
+  plotOptions: {
+    series: {
+      label: {
+        connectorAllowed: false
+      } }
+  },
+
+  series: [{
+    name: 'defaults',
+    data: mydata
+  }],
+
+  responsive: {
+    rules: [{
+      condition: {
+        maxWidth: 500
+      }    }]
+  }
+
+});
+};
+</script>
+
+
+<script>
+
+function draw_set(containername,yaxislabel,data) {
+
+    Highcharts.chart(containername, {
+        legend: {
+        enabled: true
+    },
+    credits:false,
+      chart: {
+  backgroundColor:"#F0F4FA"},
+  title: {
+    text: 'Number of loans defaulting by industry'
+  },
+
+
+  yAxis: {
+    title: {
+      text: yaxislabel
+    }
+  },
+
+  xAxis: {
+      categories: ["01-01-2020", "08-01-2020", "15-01-2020", "22-01-2020", "29-01-2020", "05-02-2020", "12-02-2020", "19-02-2020", "26-02-2020", "04-03-2020", "11-03-2020", "18-03-2020", "25-03-2020", "01-04-2020", "08-04-2020", "15-04-2020", "22-04-2020", "29-04-2020", "06-05-2020", "13-05-2020", "20-05-2020", "27-05-2020", "03-06-2020", "10-06-2020", "17-06-2020", "24-06-2020", "01-07-2020", "08-07-2020", "15-07-2020", "22-07-2020", "29-07-2020", "05-08-2020", "12-08-2020", "19-08-2020", "26-08-2020", "02-09-2020", "09-09-2020", "16-09-2020", "23-09-2020", "30-09-2020", "07-10-2020", "14-10-2020", "21-10-2020", "28-10-2020", "04-11-2020", "11-11-2020", "18-11-2020", "25-11-2020", "02-12-2020", "09-12-2020", "16-12-2020", "23-12-2020", "31-12-2020"],
+
+    accessibility: {
+      rangeDescription: 'Range: 2020 to 2021'
+    }
+  },
+
+  plotOptions: {
+    series: {
+      label: {
+        connectorAllowed: false
+      } }
+  },
+
+  series: [{name: 'Accomodation and food', data: data['Accomodation and food']},
+ {name: 'Agriculture', data: data['Agriculture']},
+ {name: 'Construction', data: data['Construction']},
+ {name: 'Education', data: data['Education']},
+ {name: 'Information and communcaition',
+  data: data['Information and communcaition']},
+ {name: 'Manufacturing', data: data['Manufacturing']},
+ {name: 'Other services', data: data['Other services']},
+ {name: 'Professional services', data: data['Professional services']},
+ {name: 'Transportation and storage',
+  data: data['Transportation and storage']},
+ {name: 'Wholesale and retail', data: data['Wholesale and retail']}]
+  ,
+
+  responsive: {
+    rules: [{
+      condition: {
+        maxWidth: 500
+      }    }]
+  }
+
+});
+};
+</script>
+
+
+
+<script>
+
+function draw_curves(containername,yaxislabel,curve_info,data) {
+
+    Highcharts.chart(containername, {
+        legend: {
+        enabled: false
+    },
+    credits:false,
+      chart: {
+  backgroundColor:"#F0F4FA"},
+  title: {
+    text: 'Subsector Impact Curves'
+  },
+
+
+  yAxis: {
+    title: {
+      text: yaxislabel
+    }
+  },
+
+  xAxis: {
+      categories: ["01-01-2020", "08-01-2020", "15-01-2020", "22-01-2020", "29-01-2020", "05-02-2020", "12-02-2020", "19-02-2020", "26-02-2020", "04-03-2020", "11-03-2020", "18-03-2020", "25-03-2020", "01-04-2020", "08-04-2020", "15-04-2020", "22-04-2020", "29-04-2020", "06-05-2020", "13-05-2020", "20-05-2020", "27-05-2020", "03-06-2020", "10-06-2020", "17-06-2020", "24-06-2020", "01-07-2020", "08-07-2020", "15-07-2020", "22-07-2020", "29-07-2020", "05-08-2020", "12-08-2020", "19-08-2020", "26-08-2020", "02-09-2020", "09-09-2020", "16-09-2020", "23-09-2020", "30-09-2020", "07-10-2020", "14-10-2020", "21-10-2020", "28-10-2020", "04-11-2020", "11-11-2020", "18-11-2020", "25-11-2020", "02-12-2020", "09-12-2020", "16-12-2020", "23-12-2020", "31-12-2020"],
+
+    accessibility: {
+      rangeDescription: 'Range: 2020 to 2021'
+    }
+  },
+
+  plotOptions: {
+    series: {
+      label: {
+        connectorAllowed: false
+      } }
+  },
+
+  series: [{'name': 'dog-groomers', 'data': data['dog-groomers']},
+ {'name': 'local-dog-kennels', 'data': data['local-dog-kennels']},
+ {'name': 'pet-shops', 'data': data['pet-shops']},
+ {'name': 'vets', 'data': data['vets']},
+ {'name': 'car-dismantlers', 'data': data['car-dismantlers']},
+ {'name': 'garages', 'data': data['garages']},
+ {'name': 'taxi-service', 'data': data['taxi-service']},
+ {'name': 'tyres', 'data': data['tyres']},
+ {'name': 'used-cars', 'data': data['used-cars']},
+ {'name': 'auto-spare-parts', 'data': data['auto-spare-parts']},
+ {'name': 'tractor-supply-company', 'data': data['tractor-supply-company']},
+ {'name': 'tyre-wholesalers', 'data': data['tyre-wholesalers']},
+ {'name': 'agricultural-equipment', 'data': data['agricultural-equipment']},
+ {'name': 'catering-equipment', 'data': data['catering-equipment']},
+ {'name': 'farm-supply-store', 'data': data['farm-supply-store']},
+ {'name': 'catering-ireland', 'data': data['catering-ireland']},
+ {'name': 'pubs', 'data': data['pubs']},
+ {'name': 'restaurants', 'data': data['restaurants']},
+ {'name': 'takeaways', 'data': data['takeaways']},
+ {'name': 'playschools', 'data': data['playschools']},
+ {'name': 'primary-schools', 'data': data['primary-schools']},
+ {'name': 'schools-colleges-post-primary-tutorial',
+  'data': data['schools-colleges-post-primary-tutorial']},
+ {'name': 'computer-pc', 'data': data['computer-pc']},
+ {'name': 'general-electric-appliances',
+  'data': data['general-electric-appliances']},
+ {'name': 'mobile-phones', 'data': data['mobile-phones']},
+ {'name': 'fabrics', 'data': data['fabrics']},
+ {'name': 'uniforms', 'data': data['uniforms']},
+ {'name': 'wholesale-clothing', 'data': data['wholesale-clothing']},
+ {'name': 'furniture-shops', 'data': data['furniture-shops']},
+ {'name': 'garden-centres', 'data': data['garden-centres']},
+ {'name': 'windows', 'data': data['windows']},
+ {'name': 'windshield-replacement', 'data': data['windshield-replacement']},
+ {'name': 'engineers-supplies', 'data': data['engineers-supplies']},
+ {'name': 'plant-hire-contractors', 'data': data['plant-hire-contractors']},
+ {'name': 'wholesale-appliances', 'data': data['wholesale-appliances']},
+ {'name': 'directory-publishers', 'data': data['directory-publishers']},
+ {'name': 'graphic-designers', 'data': data['graphic-designers']},
+ {'name': 'interactive-agencies', 'data': data['interactive-agencies']},
+ {'name': 'ppc-agency', 'data': data['ppc-agency']},
+ {'name': 'seo-agency', 'data': data['seo-agency']},
+ {'name': 'software-development', 'data': data['software-development']},
+ {'name': 'beauty-supply-store', 'data': data['beauty-supply-store']},
+ {'name': 'hair-salon-equipment', 'data': data['hair-salon-equipment']},
+ {'name': 'interior-designers', 'data': data['interior-designers']},
+ {'name': 'office-furniture', 'data': data['office-furniture']},
+ {'name': 'bouncy-castles', 'data': data['bouncy-castles']},
+ {'name': 'wedding-dresses', 'data': data['wedding-dresses']},
+ {'name': 'coal-solid-fuel-merchants',
+  'data': data['coal-solid-fuel-merchants']},
+ {'name': 'fuel-oil', 'data': data['fuel-oil']},
+ {'name': 'glass-glazers', 'data': data['glass-glazers']},
+ {'name': 'metal-waste', 'data': data['metal-waste']},
+ {'name': 'signs-ireland', 'data': data['signs-ireland']},
+ {'name': 'accountants', 'data': data['accountants']},
+ {'name': 'bookkeeping-company', 'data': data['bookkeeping-company']},
+ {'name': 'estate-agents', 'data': data['estate-agents']},
+ {'name': 'home-insurance-companies-life-insurance-companies',
+  'data': data['home-insurance-companies-life-insurance-companies']},
+ {'name': 'solicitors', 'data': data['solicitors']},
+ {'name': 'cleaning-companies', 'data': data['cleaning-companies']},
+ {'name': 'pest-services', 'data': data['pest-services']},
+ {'name': 'surveillance-services', 'data': data['surveillance-services']},
+ {'name': 'insurance-adjustors', 'data': data['insurance-adjustors']},
+ {'name': 'recruitment-agencies', 'data': data['recruitment-agencies']},
+ {'name': 'florists', 'data': data['florists']},
+ {'name': 'jewellery', 'data': data['jewellery']},
+ {'name': 'ladies-fashion-clothing',
+  'data': data['ladies-fashion-clothing']},
+ {'name': 'ladies-shoe-shops', 'data': data['ladies-shoe-shops']},
+ {'name': 'b-b', 'data': data['b-b']},
+ {'name': 'hotels', 'data': data['hotels']},
+ {'name': 'sports-stores', 'data': data['sports-stores']},
+ {'name': 'travel-agents', 'data': data['travel-agents']},
+ {'name': 'courier', 'data': data['courier']},
+ {'name': 'freight-carriers', 'data': data['freight-carriers']},
+ {'name': 'haulage-contractors', 'data': data['haulage-contractors']}]
+  ,
+
+  responsive: {
+    rules: [{
+      condition: {
+        maxWidth: 500
+      }    }]
+  }
+
+});
+};
+
+
+
+
+
+</script>
+
+
+</html>
